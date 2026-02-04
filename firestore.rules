@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper to check if user is accessing their own data
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Partners Collection
+    match /partners/{userId} {
+      // Allow reading/writing if it's the user's own profile
+      allow read, write: if isOwner(userId);
+      
+      // Allow creation if authenticated (for signup)
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Subcollection: Transactions
+      match /transactions/{transactionId} {
+        allow read: if isOwner(userId);
+        // Transactions are usually created by server/admin logic, but for this app:
+        allow write: if isOwner(userId); 
+      }
+    }
+
+    // Orders Collection
+    match /orders/{orderId} {
+      // Authenticated users (partners) can view orders
+      allow read: if isAuthenticated();
+      
+      // Only partners can update status/accept
+      allow update: if isAuthenticated();
+      
+      // Creation usually by customers, but for now allow auth users
+      allow create: if isAuthenticated();
+    }
+  }
+}
