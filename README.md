@@ -1,74 +1,123 @@
-# React + TypeScript + Vite
+.GDelivery Partners 🚚
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+.GDelivery Partners is a dedicated delivery partner portal built as part of the .gdelivery ecosystem. It enables delivery riders to manage orders, track deliveries in real time, and monitor earnings through an integrated wallet system. The portal is designed to be fast, reliable, and scalable for real-world logistics operations.
 
-Currently, two official plugins are available:
+Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The partner portal serves as the operational backbone for delivery riders. It connects directly with the .gdelivery customer platform via a shared backend and APIs, ensuring seamless order flow, live updates, and accurate earnings tracking.
 
-## React Compiler
+Key Features
+🔐 Authentication
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Secure partner-only login and signup
 
-## Expanding the ESLint configuration
+Persistent sessions
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Role-restricted access (partners only)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+📦 Order Management
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+View available delivery orders
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Accept or reject orders based on preference
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Active order limit to prevent overload
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Real-time order status updates:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-"# Delivery-Partner-Portal" 
+Pending
+
+Accepted
+
+Picked Up
+
+In Transit
+
+Delivered
+
+🗺️ Live Tracking & Routing
+
+Distance and routing powered by GraphHopper
+
+Live view of pickup and drop locations
+
+Rider location tracking for active deliveries
+
+📍 Location Preferences
+
+Select preferred delivery areas
+
+Add, edit, and remove custom delivery locations
+
+Filter available orders based on selected zones
+
+💰 Wallet & Earnings
+
+Automatic wallet credit after successful delivery
+
+Real-time earnings calculation
+
+Transaction history per order
+
+Daily and total earnings overview
+
+Tech Stack
+
+Frontend: Modern web framework (React / Next.js)
+
+Backend: Shared API with .gdelivery
+
+Maps & Routing: GraphHopper API
+
+Authentication: Secure auth (JWT / Firebase / Supabase)
+
+Database: Centralized order & wallet database
+
+System Flow
+
+Customer places an order on .gdelivery
+
+Order appears in the partner order pool
+
+Partner accepts the order
+
+Delivery status updates in real time
+
+Wallet is credited upon successful delivery
+
+Security & Reliability
+
+Partner-only route protection
+
+Server-side validation for order updates
+
+Wallet credits locked to delivery confirmation
+
+Secure API communication between platforms
+
+Design Philosophy
+
+Dark UI with purple & black theme
+
+Dashboard-first experience
+
+Mobile-friendly and responsive
+
+Minimal, distraction-free workflow for riders
+
+Future Enhancements
+
+Live GPS navigation
+
+Partner ratings & reviews
+
+Withdrawal to bank / UPI
+
+Admin approval & KYC verification
+
+Smart order auto-assignment
+
+Project Status
+
+🚧 Actively evolving
+New features and improvements are continuously being added.
