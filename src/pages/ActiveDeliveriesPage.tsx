@@ -95,7 +95,7 @@ export default function ActiveDeliveriesPage() {
         };
 
         fetchRoute();
-    }, [orders]); // Re-run if orders change (e.g. status update or new order)
+    }, [orders, pickupCoords, dropCoords]); // Re-run if orders change or coords update
 
     const handleUpdateStatus = async (orderId: string, newStatus: string) => {
         if (!currentPartner) return;

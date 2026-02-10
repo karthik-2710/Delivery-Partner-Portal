@@ -37,8 +37,8 @@ export const orderService = {
                 });
             });
             return { success: true };
-        } catch (error: any) {
-            return { success: false, error: error.message };
+        } catch (error) {
+            return { success: false, error: (error as Error).message };
         }
     },
 
@@ -87,14 +87,14 @@ export const orderService = {
                 }
             });
             return { success: true };
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Update Status Error:", error);
-            return { success: false, error: error.message };
+            return { success: false, error: (error as Error).message };
         }
     },
 
     // Helper using Haversine formula to check if order is within range of any saved location
-    isOrderMatching: (orderPickupCoords: { lat: number, lng: number }, savedLocations: any[]) => {
+    isOrderMatching: (orderPickupCoords: { lat: number, lng: number }, savedLocations: { lat: number, lng: number, radius?: number }[]) => {
         if (!savedLocations || savedLocations.length === 0) return true; // If no preferences, show all
 
         const R = 6371; // Radius of the earth in km

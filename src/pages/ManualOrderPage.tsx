@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { db } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { mapService } from '../services/mapService';
+// import { mapService } from '../services/mapService'; // Unused
 import { motion } from 'framer-motion';
 import { Package, MapPin, DollarSign, Truck } from 'lucide-react';
 
@@ -58,9 +58,9 @@ export default function ManualOrderPage() {
                 distance: '',
                 weight: ''
             });
-        } catch (error: any) {
+        } catch (error) {
             console.error("Error creating order:", error);
-            setMessage("Failed to create order: " + error.message);
+            setMessage("Failed to create order: " + (error as Error).message);
         } finally {
             setLoading(false);
         }

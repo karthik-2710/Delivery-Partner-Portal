@@ -12,8 +12,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function OrdersPage() {
     const { currentPartner } = useAuth();
     const [orders, setOrders] = useState<Order[]>([]);
-    const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+    const [matchingOrders, setMatchingOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isFiltering, setIsFiltering] = useState(false);
     const [showMatchingOnly, setShowMatchingOnly] = useState(false);
 
     useEffect(() => {
@@ -37,11 +38,11 @@ export default function OrdersPage() {
     // Filter Logic
     useEffect(() => {
         const filterOrders = async () => {
-            if (!currentPartner || !showMatchingOnly || !currentPartner.savedLocations || currentPartner.savedLocations.length === 0) {
-                setFilteredOrders(orders);
+            if (!showMatchingOnly || !currentPartner || !currentPartner.savedLocations || currentPartner.savedLocations.length === 0) {
                 return;
             }
 
+            setIsFiltering(true);
             // For each order, we need to check if it matches. 
             // Ideally coordinates should be stored on order creation to avoid geocoding repeatedly.
             // We will do client-side geocoding here CAUTIOUSLY (not recommended for production @ scale)
@@ -57,19 +58,18 @@ export default function OrdersPage() {
                     if (orderService.isOrderMatching(pickupCoords, currentPartner.savedLocations)) {
                         matching.push(order);
                     }
-                } else {
-                    // If can't geocode, maybe include it or exclude it? Excluding for strictness.
                 }
             }
-            setFilteredOrders(matching);
+            setMatchingOrders(matching);
+            setIsFiltering(false);
         };
 
         if (showMatchingOnly) {
             filterOrders();
-        } else {
-            setFilteredOrders(orders);
         }
     }, [orders, showMatchingOnly, currentPartner]);
+
+    const displayedOrders = showMatchingOnly ? matchingOrders : orders;
 
     const handleAccept = async (orderId: string) => {
         if (!currentPartner) return;
@@ -131,7 +131,16 @@ export default function OrdersPage() {
             )}
 
             <AnimatePresence mode="popLayout">
-                {filteredOrders.length === 0 ? (
+                {isFiltering ? (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex flex-col items-center justify-center py-20"
+                    >
+                        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4" />
+                        <p className="text-zinc-400 text-sm">Finding matching orders...</p>
+                    </motion.div>
+                ) : displayedOrders.length === 0 ? (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -147,7 +156,7 @@ export default function OrdersPage() {
                     </motion.div>
                 ) : (
                     <div className="space-y-4">
-                        {filteredOrders.map(order => (
+                        {displayedOrders.map(order => (
                             <OrderCard
                                 key={order.id}
                                 order={order}

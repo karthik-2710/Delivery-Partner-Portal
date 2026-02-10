@@ -34,6 +34,7 @@ export default function PreferencesPage() {
 
         // Create a new SavedLocation object
         const newLocation: SavedLocation = {
+            // eslint-disable-next-line 
             id: Date.now().toString(), // Simple ID generation
             name: result.name,
             address: `${result.street || ''} ${result.housenumber || ''}, ${result.city || ''}`.trim() || result.name,

@@ -30,8 +30,8 @@ export default function Login() {
                 await signOut(auth);
                 setError('This account is not registered as a partner.');
             }
-        } catch (err: any) {
-            setError('Failed to login. ' + err.message);
+        } catch (err) {
+            setError('Failed to login. ' + (err as Error).message);
         } finally {
             setLoading(false);
         }

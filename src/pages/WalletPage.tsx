@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 
 export default function WalletPage() {
     const { currentPartner } = useAuth();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [transactions, setTransactions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
