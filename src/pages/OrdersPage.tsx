@@ -20,7 +20,7 @@ export default function OrdersPage() {
     useEffect(() => {
         const q = query(
             collection(db, 'orders'),
-            where('status', '==', 'pending')
+            where('status', '==', 'Pending')
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -52,7 +52,7 @@ export default function OrdersPage() {
                 // Try to get coords (Mocking or fetching if not present)
                 // Note: In a real app, order.pickupCoords should exist.
                 // We'll fallback to geocoding if needed, but throttle it.
-                const results = await mapService.geocode(order.pickupLocation);
+                const results = await mapService.geocode(order.fromLocation);
                 if (results.length > 0) {
                     const pickupCoords = { lat: results[0].point.lat, lng: results[0].point.lng };
                     if (orderService.isOrderMatching(pickupCoords, currentPartner.savedLocations)) {

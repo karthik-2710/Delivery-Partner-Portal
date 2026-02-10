@@ -11,6 +11,7 @@ import Profile from './pages/ProfilePage';
 import Preferences from './pages/PreferencesPage';
 import ManualOrder from './pages/ManualOrderPage';
 import { AnimatePresence } from 'framer-motion';
+import AIChatbot from './components/AIChatbot';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -41,6 +42,7 @@ function App() {
     <Router>
       <AuthProvider>
         <AnimatedRoutes />
+        <AIChatbot />
       </AuthProvider>
     </Router>
   );

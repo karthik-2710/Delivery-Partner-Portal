@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db, storage } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useNavigate, Link } from 'react-router-dom';
-import { Truck, ChevronDown, Upload, X, FileText, CheckCircle } from 'lucide-react';
+import { Truck, ChevronDown, ArrowRight, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
+import DigiLockerButton from '../components/DigiLocker/DigiLockerButton';
+import type { DigiLockerResponse } from '../types';
 
 export default function Signup() {
     const [formData, setFormData] = useState({
@@ -17,16 +18,8 @@ export default function Signup() {
     });
 
     // KYC State
-    const [files, setFiles] = useState<{ [key: string]: File | null }>({
-        aadhaar: null,
-        license: null,
-        rcBook: null
-    });
-    const [previews, setPreviews] = useState<{ [key: string]: string | null }>({
-        aadhaar: null,
-        license: null,
-        rcBook: null
-    });
+    const [kycData, setKycData] = useState<DigiLockerResponse | null>(null);
+    const [isVerified, setIsVerified] = useState(false);
 
     const [error, setError] = useState('');
     const [loadingStatus, setLoadingStatus] = useState<string | null>(null);
@@ -36,93 +29,58 @@ export default function Signup() {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
+    const handleDigiLockerSuccess = (data: DigiLockerResponse) => {
+        console.log("DigiLocker data received:", data);
+        setKycData(data);
+        setIsVerified(true);
 
-            // Validation: Max 5MB
-            if (file.size > 5 * 1024 * 1024) {
-                setError(`${type.toUpperCase()} file size must be less than 5MB`);
-                return;
-            }
-
-            // Validation: Image types
-            if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-                setError(`${type.toUpperCase()} must be a JPG or PNG image`);
-                return;
-            }
-
-            setFiles(prev => ({ ...prev, [type]: file }));
-            setPreviews(prev => ({ ...prev, [type]: URL.createObjectURL(file) }));
-            setError('');
-        }
-    };
-
-    const removeFile = (type: string) => {
-        setFiles(prev => ({ ...prev, [type]: null }));
-        if (previews[type]) {
-            URL.revokeObjectURL(previews[type]!);
-            setPreviews(prev => ({ ...prev, [type]: null }));
+        // Auto-fill available data
+        if (data.name && !formData.name) {
+            setFormData(prev => ({ ...prev, name: data.name }));
         }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!isVerified || !kycData) {
+            setError("Please complete DigiLocker verification to proceed.");
+            return;
+        }
+
         setLoadingStatus('Initializing...');
         setError('');
 
-        console.log("Starting signup process...");
-
         try {
-            // 1. Validation
-            if (!files.aadhaar || !files.license || !files.rcBook) {
-                throw new Error("All KYC documents (Aadhaar, License, RC Book) are required.");
-            }
-
-            // 2. Create Auth User
+            // 1. Create Auth User
             setLoadingStatus('Creating User Account...');
-            console.log("Creating user with email:", formData.email);
             const { user } = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-            console.log("User created:", user.uid);
 
-            // 3. Upload Documents
-            const uploadFile = async (file: File, path: string, docName: string) => {
-                setLoadingStatus(`Uploading ${docName}...`);
-                console.log(`Uploading ${docName} to ${path}`);
-                const storageRef = ref(storage, path);
-                const snapshot = await uploadBytes(storageRef, file);
-                console.log(`${docName} uploaded, getting URL...`);
-                return await getDownloadURL(snapshot.ref);
-            };
-
-            const documents = {
-                aadhaar: await uploadFile(files.aadhaar, `partners/${user.uid}/documents/aadhaar_${Date.now()}`, 'Aadhaar Card'),
-                license: await uploadFile(files.license, `partners/${user.uid}/documents/license_${Date.now()}`, 'Driving License'),
-                rcBook: await uploadFile(files.rcBook, `partners/${user.uid}/documents/rcBook_${Date.now()}`, 'Vehicle RC')
-            };
-            console.log("All documents uploaded.");
-
-            // 4. Create Firestore Document
+            // 2. Create Firestore Document
             setLoadingStatus('Finalizing Registration...');
-            console.log("Creating Firestore document...");
             await setDoc(doc(db, 'partners', user.uid), {
                 uid: user.uid,
                 name: formData.name,
                 email: formData.email,
                 phone: formData.phone,
                 vehicleType: formData.vehicleType,
-                status: 'pending_verification', // Initial status
-                documents, // Store URLs
+                status: 'verified', // Auto-verified via DigiLocker
                 walletBalance: 0,
                 totalDeliveries: 0,
-                joinedAt: serverTimestamp()
+                joinedAt: serverTimestamp(),
+                kyc: {
+                    verified: true,
+                    verifiedAt: serverTimestamp(),
+                    method: 'digilocker_demo',
+                    aadharNumber: kycData.aadharNumber,
+                    documents: kycData.documents
+                }
             });
 
             navigate('/');
         } catch (err) {
             console.error("Signup Error:", err);
             setError('Failed to create account. ' + (err as Error).message);
-            // In a real app, we might want to delete the auth user if firestore/storage fails
         } finally {
             setLoadingStatus(null);
         }
@@ -154,7 +112,7 @@ export default function Signup() {
                     <p className="mt-2 text-gray-400">Join our delivery fleet today</p>
                 </div>
 
-                <form className="mt-8 space-y-4 bg-partner-card/50 backdrop-blur-md border border-white/5 p-8 rounded-3xl shadow-xl" onSubmit={handleSubmit}>
+                <div className="mt-8 space-y-4 bg-partner-card/50 backdrop-blur-md border border-white/5 p-8 rounded-3xl shadow-xl">
                     <input
                         name="name"
                         type="text"
@@ -199,62 +157,21 @@ export default function Signup() {
                         </div>
                     </div>
 
-                    {/* KYC Document Upload Section */}
+                    {/* KYC Section */}
                     <div className="space-y-4 pt-4 border-t border-white/10">
                         <h3 className="text-white font-semibold text-lg flex items-center gap-2">
-                            <FileText className="w-5 h-5 text-partner-primary" />
-                            KYC Documents
+                            <ShieldCheck className="w-5 h-5 text-partner-primary" />
+                            Identity Verification
                         </h3>
 
-                        {['aadhaar', 'license', 'rcBook'].map((docType) => (
-                            <div key={docType} className="bg-zinc-900/50 p-4 rounded-xl border border-white/5">
-                                <div className="flex justify-between items-center mb-2">
-                                    <label className="text-gray-300 capitalize text-sm font-medium">
-                                        {docType === 'rcBook' ? 'Vehicle RC Book' : docType === 'aadhaar' ? 'Aadhaar Card (Front)' : 'Driving License'}
-                                    </label>
-                                    {files[docType] ? (
-                                        <button
-                                            type="button"
-                                            onClick={() => removeFile(docType)}
-                                            className="text-red-400 hover:text-red-300 p-1"
-                                        >
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    ) : (
-                                        <span className="text-xs text-gray-500">*Required</span>
-                                    )}
-                                </div>
+                        <p className="text-xs text-gray-400 mb-2">
+                            To ensure safety and trust, we require government-issued identity verification via DigiLocker.
+                        </p>
 
-                                {previews[docType] ? (
-                                    <div className="relative w-full h-32 bg-black/50 rounded-lg overflow-hidden border border-partner-primary/30">
-                                        <img
-                                            src={previews[docType]!}
-                                            alt="Preview"
-                                            className="w-full h-full object-cover"
-                                        />
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                            <CheckCircle className="w-8 h-8 text-green-500 drop-shadow-md" />
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-partner-primary hover:bg-partner-primary/5 transition-all group">
-                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                            <Upload className="w-8 h-8 mb-3 text-gray-400 group-hover:text-partner-primary transition-colors" />
-                                            <p className="text-xs text-gray-500">
-                                                <span className="font-semibold text-gray-300">Click to upload</span>
-                                            </p>
-                                            <p className="text-[10px] text-gray-600 mt-1">JPG, PNG (Max 5MB)</p>
-                                        </div>
-                                        <input
-                                            type="file"
-                                            className="hidden"
-                                            accept="image/jpeg, image/png, image/jpg"
-                                            onChange={(e) => handleFileChange(e, docType)}
-                                        />
-                                    </label>
-                                )}
-                            </div>
-                        ))}
+                        <DigiLockerButton
+                            isVerified={isVerified}
+                            onVerified={handleDigiLockerSuccess}
+                        />
                     </div>
 
                     <input
@@ -278,16 +195,22 @@ export default function Signup() {
                     )}
 
                     <button
-                        type="submit"
-                        disabled={!!loadingStatus}
-                        className="btn-primary mt-4 py-4 text-base"
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={!!loadingStatus || !isVerified}
+                        className="btn-primary mt-4 py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed group w-full"
                     >
                         {loadingStatus ? (
                             <span className="flex items-center justify-center gap-2">
                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                 {loadingStatus}
                             </span>
-                        ) : 'Register as Partner'}
+                        ) : (
+                            <span className="flex items-center justify-center gap-2">
+                                Register as Partner
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </span>
+                        )}
                     </button>
 
                     <div className="text-center text-sm mt-6">
@@ -296,7 +219,7 @@ export default function Signup() {
                             Sign in
                         </Link>
                     </div>
-                </form>
+                </div>
             </motion.div>
         </div>
     );

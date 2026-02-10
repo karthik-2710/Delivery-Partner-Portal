@@ -27,7 +27,7 @@ export default function ActiveDeliveriesPage() {
         const q = query(
             collection(db, 'orders'),
             where('partnerId', '==', currentPartner.uid),
-            where('status', 'in', ['accepted', 'picked_up', 'in_transit'])
+            where('status', 'in', ['Accepted', 'Picked Up', 'In Transit'])
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -67,7 +67,7 @@ export default function ActiveDeliveriesPage() {
             // Geocode Pickup
             let start = pickupCoords;
             if (!start) {
-                const pickups = await mapService.geocode(activeOrder.pickupLocation);
+                const pickups = await mapService.geocode(activeOrder.fromLocation);
                 if (pickups.length > 0) {
                     start = [pickups[0].point.lat, pickups[0].point.lng];
                     setPickupCoords(start);
@@ -77,7 +77,7 @@ export default function ActiveDeliveriesPage() {
             // Geocode Drop
             let end = dropCoords;
             if (!end) {
-                const drops = await mapService.geocode(activeOrder.dropLocation);
+                const drops = await mapService.geocode(activeOrder.toLocation);
                 if (drops.length > 0) {
                     end = [drops[0].point.lat, drops[0].point.lng];
                     setDropCoords(end);

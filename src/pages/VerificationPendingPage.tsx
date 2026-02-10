@@ -25,14 +25,23 @@ export default function VerificationPendingPage() {
                     title: 'Application Rejected',
                     description: 'Your application was not approved. Please contact support for more information.'
                 };
+            case 'suspended':
+                return {
+                    icon: AlertTriangle,
+                    color: 'text-red-500',
+                    bgColor: 'bg-red-500/10',
+                    borderColor: 'border-red-500/20',
+                    title: 'Account Suspended',
+                    description: 'Your account has been suspended due to policy violations. Please contact support.'
+                };
             default:
                 return {
                     icon: AlertTriangle,
                     color: 'text-blue-500',
                     bgColor: 'bg-blue-500/10',
                     borderColor: 'border-blue-500/20',
-                    title: 'Wait for Approval',
-                    description: 'Your account is under review.'
+                    title: 'Verification Incomplete',
+                    description: 'Your account is under review or verification is pending.'
                 };
         }
     };

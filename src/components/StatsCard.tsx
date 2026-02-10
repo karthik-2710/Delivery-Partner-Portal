@@ -7,13 +7,14 @@ interface StatsCardProps {
     value: string | number;
     icon: LucideIcon;
     trend?: string;
-    color?: 'purple' | 'blue' | 'green' | 'orange';
+    color?: 'blue' | 'purple' | 'green' | 'orange';
+    className?: string;
 }
 
-export default function StatsCard({ title, value, icon: Icon, trend, color = 'purple' }: StatsCardProps) {
+export default function StatsCard({ title, value, icon: Icon, trend, color = 'blue', className = '' }: StatsCardProps) {
     const colorStyles = {
-        purple: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20', ring: 'group-hover:ring-purple-500/30' },
         blue: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20', ring: 'group-hover:ring-blue-500/30' },
+        purple: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/20', ring: 'group-hover:ring-indigo-500/30' },
         green: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20', ring: 'group-hover:ring-emerald-500/30' },
         orange: { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/20', ring: 'group-hover:ring-orange-500/30' },
     };
@@ -23,7 +24,7 @@ export default function StatsCard({ title, value, icon: Icon, trend, color = 'pu
     return (
         <motion.div
             whileHover={{ y: -4, scale: 1.02 }}
-            className="card group cursor-default transition-all duration-300"
+            className={`card group cursor-default transition-all duration-300 ${className}`}
         >
             <div className="flex justify-between items-start mb-4 relative z-10">
                 <div className={clsx(

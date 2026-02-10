@@ -16,6 +16,7 @@ export const orderService = {
     },
 
     acceptOrder: async (orderId: string, partnerId: string) => {
+        console.log(`[OrderService] Attempting to accept order: ${orderId} by ${partnerId}`);
         const orderRef = doc(db, 'orders', orderId);
 
         try {
@@ -24,25 +25,39 @@ export const orderService = {
                 if (!orderDoc.exists()) throw new Error("Order does not exist");
 
                 const data = orderDoc.data();
-                if (data.status !== 'pending') throw new Error("Order is no longer available");
+                console.log(`[OrderService] Order State: Status=${data.status}, Available=${data.isAvailable}, Partner=${data.partnerId}`);
 
-                // Check limit (Double check inside transaction ideally, but listing query is separate)
-                // For strict correctness, we should read active count in transaction, but requires reading multiple docs or a counter on partner doc.
-                // Simplified: We assume canAcceptOrder was checked, and we just lock the order.
+                // VALIDATION: Check if order is truly available
+                // 1. Status must be 'Pending' (Title Case from BookingCalculator)
+                // 2. isAvailable must be true (if field exists - supporting legacy orders without it by fallback)
+                // 3. partnerId must be null
 
+                const isPending = data.status === 'Pending' || data.status === 'pending'; // Handle both for safety
+                const isAvailable = data.isAvailable !== false; // Default to true if missing (legacy)
+                const noPartner = !data.partnerId;
+
+                if (!isPending || !isAvailable || !noPartner) {
+                    throw new Error("Order is no longer available");
+                }
+
+                // ATOMIC UPDATE
                 transaction.update(orderRef, {
-                    status: 'accepted',
+                    status: 'Accepted', // Title Case
                     partnerId: partnerId,
+                    isAvailable: false, // Lock the order
                     acceptedAt: new Date()
                 });
             });
+            console.log(`[OrderService] Successfully accepted order: ${orderId}`);
             return { success: true };
         } catch (error) {
+            console.error("Accept Order Error:", error);
             return { success: false, error: (error as Error).message };
         }
     },
 
-    updateStatus: async (orderId: string, newStatus: string, partnerId?: string, orderPrice?: number) => {
+    updateStatus: async (orderId: string, newStatus: string, partnerId?: string) => {
+        console.log(`[OrderService] UpdateStatus: ${orderId} -> ${newStatus} (Partner: ${partnerId})`);
         const orderRef = doc(db, 'orders', orderId);
 
         try {
@@ -51,41 +66,58 @@ export const orderService = {
                 if (!orderDoc.exists()) throw new Error("Order does not exist");
 
                 const currentStatus = orderDoc.data().status;
-                if (currentStatus === 'delivered') throw new Error("Order is already completed");
+                console.log(`[OrderService] Current Status: ${currentStatus}`);
 
-                // Update Order Status
+                if (currentStatus === 'Delivered' || currentStatus === 'delivered') throw new Error("Order is already completed");
+
+                // PREPARE READS
+                let partnerDoc = null;
+                let partnerRef = null; // Declare partnerRef here
+                const isDelivering = (newStatus === 'Delivered' || newStatus === 'delivered') && partnerId;
+
+                if (isDelivering) {
+                    partnerRef = doc(db, 'partners', partnerId!);
+                    partnerDoc = await transaction.get(partnerRef);
+                    if (!partnerDoc.exists()) throw new Error("Partner not found");
+                }
+
+                // ALL READS DONE. NOW WRITES.
+
+                // 1. Update Order Status
                 transaction.update(orderRef, {
                     status: newStatus,
                     updatedAt: new Date()
                 });
 
-                // If delivering, update wallet and create transaction
-                if (newStatus === 'delivered' && partnerId && orderPrice) {
-                    const partnerRef = doc(db, 'partners', partnerId);
-                    const partnerDoc = await transaction.get(partnerRef);
-                    if (!partnerDoc.exists()) throw new Error("Partner not found");
+                // 2. If delivering, update wallet and create transaction
+                if (isDelivering && partnerDoc && partnerRef) {
+                    console.log(`[OrderService] Processing Wallet Update for ${partnerId}`);
+                    const commission = orderDoc.data().commission || 0;
 
                     // Increment Wallet
                     const currentBalance = partnerDoc.data().walletBalance || 0;
                     const currentDeliveries = partnerDoc.data().totalDeliveries || 0;
 
+                    const newBalance = currentBalance + commission;
+                    console.log(`[OrderService] Wallet: ${currentBalance} + ${commission} = ${newBalance}`);
+
                     transaction.update(partnerRef, {
-                        walletBalance: currentBalance + orderPrice,
+                        walletBalance: newBalance,
                         totalDeliveries: currentDeliveries + 1
                     });
 
                     // Add Transaction Record
-                    // Note: In transaction, we use set on a new doc ref
-                    const transactionRef = doc(collection(db, 'partners', partnerId, 'transactions'));
+                    const transactionRef = doc(collection(db, 'partners', partnerId!, 'transactions'));
                     transaction.set(transactionRef, {
                         type: 'credit',
-                        amount: orderPrice,
+                        amount: commission,
                         orderId: orderId,
-                        description: 'Delivery Earnings',
+                        description: 'Delivery Commission',
                         date: new Date()
                     });
                 }
             });
+            console.log("[OrderService] Transaction Successful");
             return { success: true };
         } catch (error: unknown) {
             console.error("Update Status Error:", error);

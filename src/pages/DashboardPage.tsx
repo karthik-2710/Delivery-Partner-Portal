@@ -69,7 +69,7 @@ export default function DashboardPage() {
                     <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
                     <p className="text-gray-400 text-sm mt-1">Hello, {currentPartner?.name?.split(' ')[0]}</p>
                 </div>
-                <div className="h-12 w-12 bg-gradient-to-br from-partner-primary to-purple-700 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-900/40 border border-white/10">
+                <div className="h-12 w-12 bg-gradient-to-br from-partner-primary to-blue-700 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-900/40 border border-white/10">
                     {currentPartner?.name?.charAt(0)}
                 </div>
             </header>
@@ -94,11 +94,11 @@ export default function DashboardPage() {
                     </div>
                 </div>
             ) : (
-                <div className="bg-gradient-to-r from-partner-primary/20 to-purple-900/20 border border-partner-primary/20 rounded-2xl p-6 relative overflow-hidden">
+                <div className="bg-gradient-to-r from-partner-primary/20 to-blue-900/20 border border-partner-primary/20 rounded-2xl p-6 relative overflow-hidden">
                     <div className="relative z-10">
                         <h3 className="text-xl font-bold text-white mb-2">Ready to earn?</h3>
-                        <p className="text-purple-200/70 text-sm mb-5 max-w-[70%]">There are <span className="text-white font-bold">{stats.availableOrders} orders</span> waiting for pickup in your area.</p>
-                        <Link to="/orders" className="bg-white text-partner-primary hover:bg-gray-100 px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-purple-900/20 inline-flex items-center gap-2 transition-all active:scale-[0.98]">
+                        <p className="text-blue-200/70 text-sm mb-5 max-w-[70%]">There are <span className="text-white font-bold">{stats.availableOrders} orders</span> waiting for pickup in your area.</p>
+                        <Link to="/orders" className="bg-white text-partner-primary hover:bg-gray-100 px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-900/20 inline-flex items-center gap-2 transition-all active:scale-[0.98]">
                             <MapPin className="w-4 h-4" />
                             Find Orders
                         </Link>
@@ -118,24 +118,28 @@ export default function DashboardPage() {
                     icon={Wallet}
                     color="green"
                     trend="+12%"
+                    className="bg-zinc-900/50 border-emerald-500/20"
                 />
                 <StatsCard
                     title="Active"
                     value={stats.activeOrders}
                     icon={Clock}
                     color="blue"
+                    className="bg-zinc-900/50 border-blue-500/20"
                 />
                 <StatsCard
                     title="Completed"
                     value={stats.completedOrders}
                     icon={CheckCircle2}
-                    color="purple"
+                    color="blue"
+                    className="bg-zinc-900/50 border-blue-500/20"
                 />
                 <StatsCard
                     title="Available"
                     value={stats.availableOrders}
                     icon={Package}
                     color="orange"
+                    className="bg-zinc-900/50 border-orange-500/20"
                 />
             </div>
 

@@ -24,9 +24,12 @@ export default function ProtectedLayout() {
     if (!currentUser) return <Navigate to="/login" />;
 
     // Verification Check
-    // If user is logged in, but partner doc is missing or verification is pending/rejected
+    // If user is logged in, but partner doc is missing or verification is pending/rejected/suspended
+    const isVerified = currentPartner?.kyc?.verified;
+    const status = currentPartner?.status;
+
     if (currentPartner) {
-        if (currentPartner.status === 'pending_verification' || currentPartner.status === 'rejected') {
+        if (!isVerified || status === 'pending_verification' || status === 'rejected' || status === 'suspended' || status === 'pending') {
             return <VerificationPendingPage />;
         }
     } else {

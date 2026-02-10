@@ -11,14 +11,14 @@
   --color-partner-border: #27272a;
   /* Zinc 800 */
 
-  --color-partner-primary: #a855f7;
-  /* Purple 500 */
-  --color-partner-primary-hover: #9333ea;
-  /* Purple 600 */
-  --color-partner-primary-light: #d8b4fe;
-  /* Purple 300 */
-  --color-partner-accent: #c084fc;
-  /* Purple 400 */
+  --color-partner-primary: #2563EB;
+  /* Electric Blue */
+  --color-partner-primary-hover: #1d4ed8;
+  /* Blue 700 */
+  --color-partner-primary-light: #60a5fa;
+  /* Blue 400 */
+  --color-partner-accent: #FACC15;
+  /* Neon Yellow */
 
   --color-status-success: #10b981;
   /* Emerald 500 */
@@ -64,7 +64,7 @@
 
   /* Premium Button Styles */
   .btn-primary {
-    @apply w-full bg-partner-primary hover:bg-partner-primary-hover text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-purple-900/40 transition-all active:scale-[0.98] border border-white/10 flex items-center justify-center gap-2;
+    @apply w-full bg-partner-primary hover:bg-partner-primary-hover text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-blue-900/40 transition-all active:scale-[0.98] border border-white/10 flex items-center justify-center gap-2;
   }
 
   .btn-secondary {
